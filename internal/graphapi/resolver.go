@@ -18,7 +18,6 @@ import (
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 
-
 var (
 	graphPath      = "query"
 	playgroundPath = "playground"
@@ -45,11 +44,10 @@ type Handler struct {
 	r              *Resolver
 	graphqlHandler http.Handler
 	playground     *playground.Playground
-	middleware     []echo.MiddlewareFunc
 }
 
 // Handler returns an http handler for a graph resolver
-func (r *Resolver) Handler(withPlayground bool, middleware []echo.MiddlewareFunc) *Handler {
+func (r *Resolver) Handler(withPlayground bool) *Handler {
 	srv := handler.NewDefaultServer(
 		NewExecutableSchema(
 			Config{
@@ -62,7 +60,6 @@ func (r *Resolver) Handler(withPlayground bool, middleware []echo.MiddlewareFunc
 
 	h := &Handler{
 		r:              r,
-		middleware:     middleware,
 		graphqlHandler: srv,
 	}
 
@@ -84,7 +81,6 @@ func (h *Handler) Handler() http.HandlerFunc {
 
 // Routes ...
 func (h *Handler) Routes(e *echo.Group) {
-	e.Use(h.middleware...)
 	e.POST(graphFullPath, h.graphRequest)
 
 	if h.playground != nil {

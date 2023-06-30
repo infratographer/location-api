@@ -5,9 +5,11 @@ import (
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
+	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.infratographer.com/permissions-api/pkg/permissions"
 	"go.infratographer.com/x/crdbx"
 	"go.infratographer.com/x/echojwtx"
 	"go.infratographer.com/x/echox"
@@ -43,6 +45,7 @@ func init() {
 	echox.MustViperFlags(viper.GetViper(), serveCmd.Flags(), defaultListenAddr)
 	echojwtx.MustViperFlags(viper.GetViper(), serveCmd.Flags())
 	events.MustViperFlagsForPublisher(viper.GetViper(), serveCmd.Flags(), appName)
+	permissions.MustViperFlags(viper.GetViper(), serveCmd.Flags())
 
 	// only available as a CLI arg because it shouldn't be something that could accidentially end up in a config file or env var
 	serveCmd.Flags().BoolVar(&serveDevMode, "dev", false, "dev mode: enables playground, disables all auth checks, sets CORS to allow all, pretty logging, etc.")
@@ -90,7 +93,21 @@ func serve(ctx context.Context) {
 	}
 
 	client := ent.NewClient(cOpts...)
+	defer client.Close()
 
+	var middleware []echo.MiddlewareFunc
+
+	perms, err := permissions.New(config.AppConfig.Permissions,
+		permissions.WithLogger(logger),
+		permissions.WithDefaultChecker(permissions.DefaultAllowChecker),
+	)
+	if err != nil {
+		logger.Fatal("failed to initialize permissions", zap.Error(err))
+	}
+
+	middleware = append(middleware, perms.Middleware())
+
+	// jwt auth middleware
 	if viper.GetBool("oidc.enabled") {
 		auth, err := echojwtx.NewAuth(ctx, config.AppConfig.OIDC)
 		if err != nil {
@@ -98,23 +115,26 @@ func serve(ctx context.Context) {
 		}
 
 		auth.JWTConfig.Skipper = echox.SkipDefaultEndpoints
-		config.AppConfig.Server = config.AppConfig.Server.WithMiddleware(auth.Middleware())
+
+		middleware = append(middleware, auth.Middleware())
 	}
 
-	srv, err := echox.NewServer(logger.Desugar(), config.AppConfig.Server, versionx.BuildDetails())
+	config.AppConfig.Server = config.AppConfig.Server.WithMiddleware(middleware...)
+
+	srv, err := echox.NewServer(logger.Desugar(), echox.ConfigFromViper(viper.GetViper()), versionx.BuildDetails())
 	if err != nil {
 		logger.Fatal("failed to initialize new server", zap.Error(err))
 	}
 
 	r := graphapi.NewResolver(client, logger.Named("resolvers"))
-	handler := r.Handler(enablePlayground, nil)
+	handler := r.Handler(enablePlayground)
 
 	srv.AddHandler(handler)
 
 	// TODO: we should have a database check
 	// srv.AddReadinessCheck("database", r.DatabaseCheck)
 
-	if err := srv.Run(); err != nil {
+	if err := srv.RunWithContext(ctx); err != nil {
 		logger.Fatal("failed to run server", zap.Error(err))
 	}
 }
