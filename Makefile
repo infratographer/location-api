@@ -9,7 +9,7 @@ DEV_URI="postgresql://root@crdb:26257/${DEV_DB}?sslmode=disable"
 TEST_URI="postgresql://root@crdb:26257/${TEST_DB}?sslmode=disable"
 
 APP_NAME=location-api
-PID_FILE=/tmp/la.pid
+PID_FILE=/tmp/loc.pid
 
 help: Makefile ## Print help
 	@grep -h "##" $(MAKEFILE_LIST) | grep -v grep | sed -e 's/:.*##/#/' | column -c 2 -t -s#
@@ -81,7 +81,7 @@ background-run:  ## Runs in the app in the background
 	@date --rfc-3339=seconds
 	@if [ ! -f "${PID_FILE}" ]; then \
 		echo --- Running binary in the background...; \
-		go run main.go serve --pid-file=${PID_FILE} --dev & \
+		go run main.go serve --dev --oidc=false --pid-file=${PID_FILE} & \
 	else \
 		echo --- Binary already running in the background...; \
 	fi

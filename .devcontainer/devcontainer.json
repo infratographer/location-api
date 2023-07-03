@@ -12,6 +12,7 @@
           "editor.defaultFormatter": "golang.go"
         },
         "go.buildTags": "testtools",
+        "go.formatTool": "goimports",
         "go.lintTool": "golangci-lint",
         "gopls": {
           "formatting.gofumpt": true,
@@ -28,5 +29,6 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
-  }
+  },
+  "postStartCommand": "/workspaces/${localWorkspaceFolderBasename}/.devcontainer/scripts/nats_account.sh"
 }
