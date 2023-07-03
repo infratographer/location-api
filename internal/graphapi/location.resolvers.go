@@ -8,11 +8,10 @@ import (
 	"context"
 
 	"entgo.io/contrib/entgql"
-	"go.infratographer.com/permissions-api/pkg/permissions"
-	"go.infratographer.com/x/gidx"
-
 	"go.infratographer.com/location-api/internal/ent/generated"
 	"go.infratographer.com/location-api/internal/ent/generated/location"
+	"go.infratographer.com/permissions-api/pkg/permissions"
+	"go.infratographer.com/x/gidx"
 )
 
 // Owner is the resolver for the owner field.
@@ -87,7 +86,5 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 // ResourceOwner returns ResourceOwnerResolver implementation.
 func (r *Resolver) ResourceOwner() ResourceOwnerResolver { return &resourceOwnerResolver{r} }
 
-type (
-	mutationResolver      struct{ *Resolver }
-	resourceOwnerResolver struct{ *Resolver }
-)
+type mutationResolver struct{ *Resolver }
+type resourceOwnerResolver struct{ *Resolver }

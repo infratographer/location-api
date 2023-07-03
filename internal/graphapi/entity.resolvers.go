@@ -7,9 +7,8 @@ package graphapi
 import (
 	"context"
 
-	"go.infratographer.com/x/gidx"
-
 	"go.infratographer.com/location-api/internal/ent/generated"
+	"go.infratographer.com/x/gidx"
 )
 
 // FindLocationByID is the resolver for the findLocationByID field.

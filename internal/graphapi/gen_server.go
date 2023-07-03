@@ -761,7 +761,6 @@ extend type Location {
   owner: ResourceOwner!
 }
 `, BuiltIn: false},
-	{Name: "../../schema/owner.graphql", Input: ``, BuiltIn: false},
 	{Name: "../../federation/directives.graphql", Input: `
 	directive @composeDirective(name: String!) repeatable on SCHEMA
 	directive @extends on OBJECT | INTERFACE
