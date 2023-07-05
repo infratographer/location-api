@@ -111,6 +111,21 @@ func serve(ctx context.Context) error {
 
 	var middleware []echo.MiddlewareFunc
 
+	// jwt auth middleware
+	if viper.GetBool("oidc.enabled") {
+		auth, err := echojwtx.NewAuth(ctx, config.AppConfig.OIDC)
+		if err != nil {
+			logger.Fatal("failed to initialize jwt authentication", zap.Error(err))
+		}
+
+		middleware = append(middleware, auth.Middleware())
+	}
+
+	srv, err := echox.NewServer(logger.Desugar(), echox.ConfigFromViper(viper.GetViper()), versionx.BuildDetails())
+	if err != nil {
+		logger.Fatal("failed to initialize new server", zap.Error(err))
+	}
+
 	perms, err := permissions.New(config.AppConfig.Permissions,
 		permissions.WithLogger(logger),
 		permissions.WithDefaultChecker(permissions.DefaultAllowChecker),
@@ -121,27 +136,8 @@ func serve(ctx context.Context) error {
 
 	middleware = append(middleware, perms.Middleware())
 
-	// jwt auth middleware
-	if viper.GetBool("oidc.enabled") {
-		auth, err := echojwtx.NewAuth(ctx, config.AppConfig.OIDC)
-		if err != nil {
-			logger.Fatal("failed to initialize jwt authentication", zap.Error(err))
-		}
-
-		auth.JWTConfig.Skipper = echox.SkipDefaultEndpoints
-
-		middleware = append(middleware, auth.Middleware())
-	}
-
-	config.AppConfig.Server = config.AppConfig.Server.WithMiddleware(middleware...)
-
-	srv, err := echox.NewServer(logger.Desugar(), echox.ConfigFromViper(viper.GetViper()), versionx.BuildDetails())
-	if err != nil {
-		logger.Fatal("failed to initialize new server", zap.Error(err))
-	}
-
 	r := graphapi.NewResolver(client, logger.Named("resolvers"))
-	handler := r.Handler(enablePlayground)
+	handler := r.Handler(enablePlayground, middleware...)
 
 	srv.AddHandler(handler)
 
