@@ -121,7 +121,7 @@ func serve(ctx context.Context) error {
 		middleware = append(middleware, auth.Middleware())
 	}
 
-	srv, err := echox.NewServer(logger.Desugar(), echox.ConfigFromViper(viper.GetViper()), versionx.BuildDetails())
+	srv, err := echox.NewServer(logger.Desugar(), config.AppConfig.Server, versionx.BuildDetails())
 	if err != nil {
 		logger.Fatal("failed to initialize new server", zap.Error(err))
 	}
