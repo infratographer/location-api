@@ -6,6 +6,7 @@ Provides GraphQL APIs to manage locations
 
 - [Development Guide](docs/development.md)
 - [Contributing](https://infratographer.com/community/contributing/)
+- [NATS](https://nats.io/)
 
 ### Getting Started
 

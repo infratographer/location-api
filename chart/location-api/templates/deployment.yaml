@@ -39,8 +39,15 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          {{- if .Values.api.extraEnvVars }}
           env:
+          {{- if .Values.api.events.nats.tokenSecretName }}
+            - name: LOCATIONAPI_EVENTS_NATS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.api.events.nats.tokenSecretName }}
+                  key: token
+          {{- end }}
+          {{- if .Values.api.extraEnvVars }}
           {{- range .Values.api.extraEnvVars }}
             - name: {{ .name }}
               value: {{ .value }}

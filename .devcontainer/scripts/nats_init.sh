@@ -1,7 +1,4 @@
 #!/bin/sh
-
-set -e
-
 # script to bootstrap a nats operator environment
 
 if nsc describe operator; then
