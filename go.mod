@@ -21,7 +21,7 @@ require (
 	github.com/wundergraph/graphql-go-tools v1.63.0
 	go.infratographer.com/permissions-api v0.1.14
 	go.infratographer.com/x v0.3.4
-	go.uber.org/zap v1.24.0
+	go.uber.org/zap v1.26.0
 )
 
 require (
@@ -141,7 +141,7 @@ require (
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.step.sm/crypto v0.31.2 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	go.uber.org/multierr v1.9.0 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1 // indirect
 	golang.org/x/mod v0.12.0 // indirect
