@@ -1,6 +1,6 @@
 module go.infratographer.com/location-api
 
-go 1.20
+go 1.21
 
 require (
 	entgo.io/contrib v0.4.5
