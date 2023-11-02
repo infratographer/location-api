@@ -1,6 +1,8 @@
 #!/bin/sh
 # script to bootstrap a nats operator environment
 
+set -e
+
 if nsc describe operator; then
     echo "operator exists, not overwriting config"
     exit 0
