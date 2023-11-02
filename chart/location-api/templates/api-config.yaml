@@ -20,6 +20,22 @@ data:
   LOCATIONAPI_OIDC_JWKS_REMOTE_TIMEOUT: "{{ .Values.api.oidc.jwksRemoteTimeout }}"
   LOCATIONAPI_SERVER_LISTEN: ":{{ .Values.api.listenPort }}"
   LOCATIONAPI_SERVER_SHUTDOWN_GRACE_PERIOD: "{{ .Values.api.shutdownGracePeriod }}"
+  METADATAAPI_PERMISSIONS_URL: "{{ .Values.api.permissions.url }}"
+{{- if .Values.api.tracing.enabled }}
+  METADATAAPI_TRACING_ENABLED: "{{ .Values.api.tracing.enabled }}"
+  METADATAAPI_TRACING_PROVIDER: "{{ .Values.api.tracing.provider }}"
+  METADATAAPI_TRACING_ENVIRONMENT: "{{ .Values.api.tracing.environment }}"
+{{- if eq .Values.api.tracing.provider "jaeger" }}
+  METADATAAPI_TRACING_JAEGER_ENDPOINT: "{{ .Values.api.tracing.jaeger.endpoint }}"
+  METADATAAPI_TRACING_JAEGER_USER: "{{ .Values.api.tracing.jaeger.user }}"
+  METADATA_TRACING_JAEGER_PASSWORD: "{{ .Values.api.tracing.jaeger.password }}"
+{{- end }}
+{{- if eq .Values.api.tracing.provider "otlpgrpc" }}
+  METADATAAPI_TRACING_OTLP_ENDPOINT: "{{ .Values.api.tracing.otlp.endpoint }}"
+  METADATAAPI_TRACING_OTLP_INSECURE: "{{ .Values.api.tracing.otlp.insecure }}"
+  METADATA_TRACING_OTLP_CERTIFICATE: "{{ .Values.api.tracing.otlp.certificate }}"
+{{- end }}
+{{- end }}
 {{- with .Values.api.trustedProxies }}
   LOCATIONAPI_SERVER_TRUSTED_PROXIES: "{{ join " " . }}"
 {{- end }}

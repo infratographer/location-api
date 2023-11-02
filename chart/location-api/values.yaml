@@ -1,20 +1,11 @@
 image:
   repository: ghcr.io/infratographer/location-api
   pullPolicy: IfNotPresent
-  tag: "v0.1.0"
+  tag: "main-latest"
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
-
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
 
 podAnnotations: {}
 
@@ -64,6 +55,7 @@ api:
   db:
     uriSecret: ""
     certSecret: ""
+  migrateOnInit: true
 
   oidc:
     enabled: false
@@ -71,6 +63,29 @@ api:
     issuer: ""
     jwks:
       remoteTimeout: 1m
+
+  permissions:
+    url: ""
+
+  tracing:
+    # enabled is true if OpenTelemetry tracing should be enabled for permissions-api
+    enabled: false
+    # environment is the OpenTelemetry tracing environment to use
+    environment: ""
+    # provider is the OpenTelemetry tracing provider to use
+    provider: stdout
+    jaeger:
+      # endpoint is the Jaeger collector to send traces to
+      endpoint: ""
+      # user is the user to use when authenticating against the Jaeger deployment
+      user: ""
+      # password is the password to use when authenticating against the Jaeger deployment
+      password: ""
+    otlp:
+      # endpoint is the OpenTelemetry Protocol (OTLP) collector endpoint to send traces to
+      endpoint: ""
+      # insecure is true if TLS should not be required when sending traces
+      insecure: false
 
   shutdownGracePeriod: 5s
   trustedProxies: []
