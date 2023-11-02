@@ -205,7 +205,6 @@ input UpdateLocationInput {
 	clearDescription: Boolean
 }
 scalar _Any
-# a union of all types that use the @key directive
 union _Entity = Location | ResourceOwner
 type _Service {
 	sdl: String

@@ -15,14 +15,9 @@ import (
 var AppConfig struct {
 	CRDB        crdbx.Config
 	Logging     loggingx.Config
-	Events      EventsConfig
+	Events      events.Config
 	OIDC        echojwtx.AuthConfig
 	Permissions permissions.Config
 	Server      echox.Config
 	Tracing     otelx.Config
-}
-
-// EventsConfig stores the configuration for a location-api event publisher
-type EventsConfig struct {
-	Publisher events.PublisherConfig
 }

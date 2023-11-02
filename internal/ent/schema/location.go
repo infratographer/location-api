@@ -50,7 +50,7 @@ func (Location) Fields() []ent.Field {
 			Annotations(
 				entgql.Type("ID"),
 				entgql.Skip(^entgql.SkipMutationCreateInput),
-				entx.EventsHookAdditionalSubject(),
+				entx.EventsHookAdditionalSubject("owner"),
 			),
 	}
 }

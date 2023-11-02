@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"syscall"
+	"time"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
@@ -27,7 +28,10 @@ import (
 	"go.infratographer.com/location-api/internal/graphapi"
 )
 
-var defaultListenAddr = ":7909"
+const (
+	defaultListenAddr = ":7909"
+	shutdownTimeout   = 10 * time.Second
+)
 
 var (
 	enablePlayground bool
@@ -57,7 +61,7 @@ func init() {
 
 	echox.MustViperFlags(viper.GetViper(), serveCmd.Flags(), defaultListenAddr)
 	echojwtx.MustViperFlags(viper.GetViper(), serveCmd.Flags())
-	events.MustViperFlagsForPublisher(viper.GetViper(), serveCmd.Flags(), appName)
+	events.MustViperFlags(viper.GetViper(), serveCmd.Flags(), appName)
 	permissions.MustViperFlags(viper.GetViper(), serveCmd.Flags())
 
 	// only available as a CLI arg because it shouldn't be something that could accidentially end up in a config file or env var
@@ -78,9 +82,9 @@ func serve(ctx context.Context) error {
 		viper.Set("oidc.enabled", false)
 	}
 
-	publisher, err := events.NewPublisher(config.AppConfig.Events.Publisher)
+	events, err := events.NewConnection(config.AppConfig.Events, events.WithLogger(logger))
 	if err != nil {
-		logger.Fatal("unable to initialize event publisher", zap.Error(err))
+		logger.Fatalw("failed to initialize events", "error", err)
 	}
 
 	err = otelx.InitTracer(config.AppConfig.Tracing, appName, logger)
@@ -97,7 +101,7 @@ func serve(ctx context.Context) error {
 
 	entDB := entsql.OpenDB(dialect.Postgres, db)
 
-	cOpts := []ent.Option{ent.Driver(entDB), ent.EventsPublisher(publisher)}
+	cOpts := []ent.Option{ent.Driver(entDB), ent.EventsPublisher(events)}
 
 	if config.AppConfig.Logging.Debug {
 		cOpts = append(cOpts,
@@ -121,7 +125,7 @@ func serve(ctx context.Context) error {
 		middleware = append(middleware, auth.Middleware())
 	}
 
-	srv, err := echox.NewServer(logger.Desugar(), config.AppConfig.Server, versionx.BuildDetails())
+	srv, err := echox.NewServer(logger.Desugar(), config.AppConfig.Server, versionx.BuildDetails(), echox.WithLoggingSkipper(echox.SkipDefaultEndpoints))
 	if err != nil {
 		logger.Fatal("failed to initialize new server", zap.Error(err))
 	}
@@ -129,6 +133,7 @@ func serve(ctx context.Context) error {
 	perms, err := permissions.New(config.AppConfig.Permissions,
 		permissions.WithLogger(logger),
 		permissions.WithDefaultChecker(permissions.DefaultAllowChecker),
+		permissions.WithEventsPublisher(events),
 	)
 	if err != nil {
 		logger.Fatal("failed to initialize permissions", zap.Error(err))
@@ -143,6 +148,13 @@ func serve(ctx context.Context) error {
 
 	// TODO: we should have a database check
 	// srv.AddReadinessCheck("database", r.DatabaseCheck)
+
+	defer func() {
+		ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
+		defer cancel()
+
+		_ = events.Shutdown(ctx)
+	}()
 
 	if err = srv.RunWithContext(ctx); err != nil {
 		logger.Fatal("failed to run server", zap.Error(err))
