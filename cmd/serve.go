@@ -25,6 +25,7 @@ import (
 
 	"go.infratographer.com/location-api/internal/config"
 	ent "go.infratographer.com/location-api/internal/ent/generated"
+	"go.infratographer.com/location-api/internal/ent/generated/eventhooks"
 	"go.infratographer.com/location-api/internal/graphapi"
 )
 
@@ -112,6 +113,14 @@ func serve(ctx context.Context) error {
 
 	client := ent.NewClient(cOpts...)
 	defer client.Close()
+
+	// Run the automatic migration tool to create all schema resources.
+	if err := client.Schema.Create(ctx); err != nil {
+		logger.Errorf("failed creating schema resources", zap.Error(err))
+		return err
+	}
+
+	eventhooks.EventHooks(client)
 
 	var middleware []echo.MiddlewareFunc
 
